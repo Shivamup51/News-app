@@ -1,0 +1,13 @@
+/* Hover effect for the nav links */
+.nav-link {
+    transition: all 0.3s ease-in-out;
+    cursor: pointer; /* This will make the finger cursor appear when hovering */
+  }
+  
+  .nav-link:hover {
+    color: #fff; /* Changes text color on hover */
+    background-color: red; /* Changes background color */
+    transform: scale(1.1); /* Slightly increases size on hover */
+    border-radius: 4px; /* Rounded corners on hover */
+  }
+  
