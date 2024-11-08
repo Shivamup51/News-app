@@ -1,48 +1,42 @@
 import { useEffect, useState } from "react";
-import PropTypes from "prop-types"; // Import PropTypes
+import PropTypes from "prop-types";
 import NewsItem from "./NewsItem";
 
 const NewsBoard = ({ category }) => {
   const [articles, setArticles] = useState([]);
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(true); // To handle loading state
 
   useEffect(() => {
     const fetchNews = async () => {
       try {
-        setLoading(true); // Start loading
-        setError(""); // Reset error state
-
-        const apiKey = import.meta.env.VITE_API_KEY;
-        if (!apiKey) {
-          setError("API key is missing. Check your .env configuration.");
-          setLoading(false);
-          return;
-        }
-
+        const apiKey = import.meta.env.VITE_API_KEY; // Fetch API key from environment variables
         const url = `https://newsapi.org/v2/top-headlines?country=us&category=${category}&apiKey=${apiKey}`;
+        
         const response = await fetch(url);
-
+        
         if (!response.ok) {
           if (response.status === 429) {
             setError("Too many requests. Please try again later.");
+          } else if (response.status === 426) {
+            setError("Upgrade Required: Please check your API usage plan.");
           } else {
             setError("An error occurred while fetching the news.");
           }
-          setLoading(false);
-          return;
+          throw new Error("API Error");
         }
 
         const data = await response.json();
-        const validArticles = data.articles.filter(
-          (news) => news && news.title && news.description && news.urlToImage
+
+        // Filter valid articles
+        const validArticles = data.articles.filter(news => 
+          news && news.title && news.description && news.urlToImage
         );
+
         setArticles(validArticles);
-        setLoading(false);
+
       } catch (err) {
         console.error(err);
-        setError("Failed to load news.");
-        setLoading(false);
+        setError("Failed to load news. Please try again later.");
       }
     };
 
@@ -54,30 +48,27 @@ const NewsBoard = ({ category }) => {
       <h2 className="text-center">
         Latest <span className="badge bg-danger">News</span>
       </h2>
-      {loading && <div className="text-center">Loading news...</div>}
       {error && <div className="alert alert-danger">{error}</div>}
       {Array.isArray(articles) && articles.length > 0 ? (
-        <div className="d-flex flex-wrap justify-content-center">
-          {articles.map((news, index) => (
-            <NewsItem
-              key={index}
-              title={news.title}
-              description={news.description}
-              src={news.urlToImage}
-              url={news.url}
-            />
-          ))}
-        </div>
+        articles.map((news, index) => (
+          <NewsItem
+            key={index}
+            title={news.title}
+            description={news.description}
+            src={news.urlToImage}
+            url={news.url}
+          />
+        ))
       ) : (
-        !loading && <div>No news available at the moment.</div>
+        <div className="text-center">No news available at the moment.</div>
       )}
     </div>
   );
 };
 
-// Add prop validation for `category`
+// Prop validation for category
 NewsBoard.propTypes = {
-  category: PropTypes.string.isRequired, // Expect `category` to be a string and is required
+  category: PropTypes.string.isRequired,
 };
 
 export default NewsBoard;
